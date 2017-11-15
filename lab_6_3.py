@@ -49,75 +49,112 @@ class City(Base):
     region = relationship('Region', backref=backref('regions'), order_by=city_id)
 
 
-def add_region():
-    while True:
+class DBCONTROLLERS:
+    @staticmethod
+    def add_region():
+        """
+        adding new record(new region) to 'regions' and new record to 'cities' table linked to previously added region
+        """
+        while True:
+            try:
+                region_name = input('Type region name: ')
+                population = int(input('Type region population: '))
+                assert population > 0, 'population can not be non-positive number'
+                square = int(input('Type region square: '))
+                assert square > 0, 'square can not be non-positive number'
+                new_region = Region(region_name=region_name,
+                                    region_population=population,
+                                    region_square=square)
+                session.add(new_region)
+                session.commit()
+                reg_id = session.query(Region.region_name, Region.region_id).filter(
+                    Region.region_name == region_name).first()
+                reg_id = reg_id.region_id
+                while True:
+                    a = input('Type name of a city (\'stop\' to stop')
+                    if a == 'stop':
+                        break
+                    else:
+                        new_city = City(city_name=a,
+                                        region_id=reg_id)
+                        session.add(new_city)
+                        session.commit()
+                print('Region \'{}\' added'.format(region_name))
+            except AssertionError:
+                print('Your data seems to be not real, try again.'
+                      ' Remember that population and square should be more than 0')
+            except ValueError:
+                print('Your input is incorrect, try again')
+            break
+        return
+
+    @staticmethod
+    def add_city():
+        print('Regions:')
+        tmp_regions = session.query(Region).all()
+        for i in tmp_regions:
+            print("{}. {}".format(i.region_id, i.region_name))
         try:
-            region_name = input('Type region name: ')
-            population = int(input('Type region population: '))
-            assert population > 0
-            square = int(input('Type region square: '))
-            assert square > 0
+            chosen_region = int(input('Choose a region to add a city (type number of chosen region) '))
+            assert chosen_region in [j.region_id for j in tmp_regions], 'id does not exist'
+            new_city_name = input('Type name of the city ')
+            reg_id = session.query(Region).filter(Region.region_id == chosen_region).first().region_id
+            new_city = City(city_name=new_city_name,
+                            region_id=reg_id)
+            session.add(new_city)
+            session.commit()
+        except ValueError:
+            print('input data can not be interpreted as number')
+        except AssertionError:
+            print('Chosen number of region does not exist in table')
+        return
+
+    @staticmethod
+    def edit_region():
+        tmp_regions = session.query(Region.region_id, Region.region_name).all()
+        for i in tmp_regions:
+            print('{}. {}'.format(i.region_id, i.region_name))
+        try:
+            chosen_reg_id = int(input('Choose a region to edit (Type its number) '))
+            assert chosen_reg_id in [j.region_id for j in tmp_regions], 'id does not exist'
+            chosen_reg = session.query(Region).filter(Region.region_id == chosen_reg_id).first()
+            new_name = input('Type new name for this region ')
+            new_population = int(input('Type new population for this region '))
+            assert new_population > 0, 'population can not be non-positive number'
+            new_square = int(input('Type new square for this region '))
+            assert new_square > 0, 'square can not be non-positive number'
+            chosen_reg.region_name = new_name
+            chosen_reg.region_population = new_population
+            chosen_reg.region_square = new_square
+            choice = int(input('Do u want to add new cities? (1/0) '))
+            session.commit()
+            if choice:
+                while True:
+                    a = input('Type name of a city (\'stop\' to stop')
+                    if a == 'stop':
+                        break
+                    else:
+                        new_city = City(city_name=a,
+                                        region_id=chosen_reg_id)
+                        session.add(new_city)
+                        session.commit()
         except AssertionError:
             print('Your data seems to be not real, try again.'
-                  ' Remember that population and square should be more than 0')
+                  ' Remember that population and square should be more than 0 ')
         except ValueError:
-            print('Your input is incorrect, try again')
-        new_region = Region(region_name=region_name,
-                            region_population=population,
-                            region_square=square)
-        session.add(new_region)
-        session.commit()
-        reg_id = session.query(Region.region_name,Region.region_id).filter(Region.region_name == region_name).first()
-        reg_id = reg_id.region_id
-        while True:
-            a = input('Type name of a city (\'stop\' to stop')
-            if a == 'stop':
-                break
-            else:
-                new_city = City(city_name=a,
-                                region_id=reg_id)
-                session.add(new_city)
-                session.commit()
-        print('Region \'{}\' added'.format(region_name))
-        break
-    return
+            print('Your input is incorrect')
 
+    @staticmethod
+    def edit_city():
+        pass
 
-def add_city():
-    print('Regions:')
-    tmp_regions = session.query(Region).all()
-    for i in tmp_regions:
-        print("{}. {}".format(i.region_id, i.region_name))
-    try:
-        chosen_region = int(input('Choose a region to add a city (type number of chosen region) '))
-        new_city_name = input('Type name of the city ')
-        reg_id = session.query(Region).filter(Region.region_id == chosen_region).first().region_id
-        new_city = City(city_name=new_city_name,
-                        region_id=reg_id)
-        session.add(new_city)
-        session.commit()
-    except ValueError:
-        print('input data incorrect')
+    @staticmethod
+    def delete_region():
+        pass
 
-    return
-
-
-def edit_region():
-    tmp_regions = session.query(Region).all()
-    for i in tmp_regions:
-        print('{}. {}'.format(i.region_id, i.region_name))
-
-
-def edit_city():
-    pass
-
-
-def delete_region():
-    pass
-
-
-def delete_city():
-    pass
+    @staticmethod
+    def delete_city():
+        pass
 
 
 # main body
@@ -136,15 +173,15 @@ my_help = 'Laboratory work #6\n'\
         '\'exit\' to finish the work'
 
 while True:
-    main_choice = input('choose an option, \'help\' to display help')
+    main_choice = input('choose an option, \'help\' to display help ')
     if main_choice == 'add_region':
-        add_region()
+        DBCONTROLLERS.add_region()
     elif main_choice == 'help':
         print(my_help)
     elif main_choice == 'add_city':
-        add_city()
+        DBCONTROLLERS.add_city()
     elif main_choice == 'edit_region':
-        edit_region()
+        DBCONTROLLERS.edit_region()
     elif main_choice == exit:
         break
 
@@ -157,4 +194,3 @@ for i in raw_region_list:
     i.append(tmp_cities)
     region_objects_list.append(REGION(i[1:]))
 print(my_help)
-
