@@ -126,8 +126,8 @@ class DBCONTROLLERS:
             chosen_reg.region_name = new_name
             chosen_reg.region_population = new_population
             chosen_reg.region_square = new_square
-            choice = int(input('Do u want to add new cities? (1/0) '))
             session.commit()
+            choice = int(input('Do u want to add new cities? (1/0) '))
             if choice:
                 while True:
                     a = input('Type name of a city (\'stop\' to stop')
@@ -146,7 +146,27 @@ class DBCONTROLLERS:
 
     @staticmethod
     def edit_city():
-        pass
+        tmp_cities = session.query(City.city_id, City.city_name).all()
+        for i in tmp_cities:
+            print('{}. {}'.format(i.city_id, i.city_name))
+        try:
+            chosen_city = int(input('Type number of chosen city '))
+            assert chosen_city in [j.city_id for j in tmp_cities], 'id does not exist'
+            edited_city = session.query(City).filter(City.city_id == chosen_city).first()
+            new_name = input('Type new name for this city ')
+            choice = int(input('Do you want to choose another region for this city? (1/0) '))
+            if choice:
+                tmp_regions = session.query(Region.region_id, Region.region_name).all()
+                print(['{}. {}'.format(j.region_id, j.region_name) for j in tmp_regions])
+                chosen_region = int(input('Type number of chosen region'))
+                assert chosen_region in [j.region_id for j in tmp_regions], 'id does not exist'
+                edited_city.region_id = chosen_region
+            edited_city.city_name = new_name
+            session.commit()
+        except ValueError:
+            print('input incorrect')
+        except AssertionError:
+            print('chosen id does not exist')
 
     @staticmethod
     def delete_region():
@@ -182,8 +202,16 @@ while True:
         DBCONTROLLERS.add_city()
     elif main_choice == 'edit_region':
         DBCONTROLLERS.edit_region()
+    elif main_choice == 'edit_city':
+        DBCONTROLLERS.edit_city()
+    elif main_choice == 'delete_region':
+        DBCONTROLLERS.delete_region()
+    elif main_choice == 'delete_city':
+        DBCONTROLLERS.delete_city()
     elif main_choice == exit:
         break
+    else:
+        print('unknown command')
 
 region_objects_list = []
 regions = session.query(Region).all()
