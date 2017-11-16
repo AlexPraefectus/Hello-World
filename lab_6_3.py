@@ -14,7 +14,7 @@ class REGION:
         return 'Name: {}\n' \
                'Population: {}\n' \
                'Square: {}\n' \
-               'Big cities: {}\n'.format(self.name, self.population, self.square, '\t'.join(self.city_list))
+               'Big cities: {}\n'.format(self.name, self.population, self.square, ',  '.join(self.city_list))
 
     def belonging(self, city_to_find):
         if city_to_find in self.city_list:
@@ -23,7 +23,7 @@ class REGION:
             return False
 
     def population_density(self):
-        return '{.2f}'.format(self.population / self.square)
+        return float('{.2f}'.format(self.population / self.square))
 
 
 # database declaration
@@ -103,6 +103,7 @@ class DBCONTROLLERS:
                             region_id=reg_id)
             session.add(new_city)
             session.commit()
+            print('Adding city succeeded')
         except ValueError:
             print('input data can not be interpreted as number')
         except AssertionError:
@@ -138,6 +139,7 @@ class DBCONTROLLERS:
                                         region_id=chosen_reg_id)
                         session.add(new_city)
                         session.commit()
+            print('Edit succeeded')
         except AssertionError:
             print('Your data seems to be not real, try again.'
                   ' Remember that population and square should be more than 0 ')
@@ -163,6 +165,7 @@ class DBCONTROLLERS:
                 edited_city.region_id = chosen_region
             edited_city.city_name = new_name
             session.commit()
+            print('Edit succeeded')
         except ValueError:
             print('input incorrect')
         except AssertionError:
@@ -170,11 +173,36 @@ class DBCONTROLLERS:
 
     @staticmethod
     def delete_region():
-        pass
+        tmp_regions = session.query(Region).all()
+        for i in tmp_regions:
+            print("{}. {}".format(i.region_id, i.region_name))
+        try:
+            chosen_region = int(input('Choose a region to add a city (type number of chosen region) '))
+            assert chosen_region in [j.region_id for j in tmp_regions], 'id does not exist'
+            query1 = session.query(City).filter(City.region_id == chosen_region).delete()
+            query2 = session.query(Region).filter(Region.region_id == chosen_region).delete()
+            session.commit()
+            print('Delete succeeded')
+        except AssertionError:
+            print('chosen number does not exist')
+        except ValueError:
+            print('input incorrect')
 
     @staticmethod
     def delete_city():
-        pass
+        tmp_cities = session.query(City).all()
+        for i in tmp_cities:
+            print('{}. {}'.format(i.city_id, i.city_name))
+        try:
+            chosen_city = int(input('Type number of chosen city '))
+            assert chosen_city in [j.city_id for j in tmp_cities], 'id does not exist'
+            query = session.query(City).filter(City.city_id == chosen_city).delete()
+            session.commit()
+            print('Delete succeeded')
+        except ValueError:
+            print('input incorrect')
+        except AssertionError:
+            print('chosen id does not exist')
 
 
 # main body
@@ -190,7 +218,7 @@ my_help = 'Laboratory work #6\n'\
         '\'delete_region\' to delete region from database (deleting region will cause deleting'\
         'all cities which are linked to it!)\n'\
         '\'delete_city\' to delete city from the database\n'\
-        '\'exit\' to finish the work'
+        '\'continue\' to finish the work with database'
 
 while True:
     main_choice = input('choose an option, \'help\' to display help ')
@@ -208,7 +236,7 @@ while True:
         DBCONTROLLERS.delete_region()
     elif main_choice == 'delete_city':
         DBCONTROLLERS.delete_city()
-    elif main_choice == exit:
+    elif main_choice == 'continue':
         break
     else:
         print('unknown command')
@@ -221,4 +249,5 @@ for i in raw_region_list:
     tmp_cities = [j.city_name for j in city_query]
     i.append(tmp_cities)
     region_objects_list.append(REGION(i[1:]))
-print(my_help)
+for i in region_objects_list:
+    print(i)
