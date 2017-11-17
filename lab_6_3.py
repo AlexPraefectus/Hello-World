@@ -221,6 +221,14 @@ class DBCONTROLLERS:
         except AssertionError:
             print('chosen id does not exist')
 
+    @staticmethod
+    def show_base():
+        tmp_regions = session.query(Region).all()
+        for i in tmp_regions:
+            tmp_cities = session.query(City).filter(City.region_id == i.region_id).all()
+            tmp_cities = [j.city_name for j in tmp_cities]
+            print('{}: {}; {}; {}'.format(i.region_name, i.region_population, i.region_square, ',  '.join(tmp_cities)))
+
 
 # main body
 Base.metadata.create_all(engine)  # creating tables from schema(no affect if tables already exist)
@@ -228,6 +236,7 @@ database_help = 'Laboratory work #6\n'\
         'Made by Oleksandr Korienev, student of iv-72\n'\
         'Only English is supported, cyrillic symbols can cause a crash\n'\
         'available commands:\n'\
+        '\'show_base\' to display content of database\n'\
         '\'add_region\' to add new region to the database\n'\
         '\'add_city\' to add new city to the database\n'\
         '\'edit_region\' to edit region \n'\
@@ -261,7 +270,10 @@ while True:
     elif main_choice == 'delete_city':
         DBCONTROLLERS.delete_city()
     elif main_choice == 'continue':
+        print('work with database ended')
         break
+    elif main_choice == 'show_base':
+        DBCONTROLLERS.show_base()
     else:
         print('unknown command')
 
@@ -307,5 +319,7 @@ while True:
             print('{} - {}'.format(i.name, i.population_density()))
     elif choice == 'exit':
         break
+    elif choice == 'help':
+        print(controls_help)
     else:
         print('unknown command')
