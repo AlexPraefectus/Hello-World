@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship, backref, sessionmaker
 
 
 class REGION:
+    """Describes region of a country (name, population, square, big cities)"""
     def __init__(self, params):
         self.name = params[0]
         self.population = params[1]
@@ -23,7 +24,7 @@ class REGION:
             return False
 
     def population_density(self):
-        return float('{.2f}'.format(self.population / self.square))
+        return float('{:.2f}'.format(self.population / self.square))
 
 
 # database declaration
@@ -49,11 +50,16 @@ class City(Base):
     region = relationship('Region', backref=backref('regions'), order_by=city_id)
 
 
+# database controls
 class DBCONTROLLERS:
+    """
+    storage of static methods to control the connected database. They take nothing as arguments, they get the control
+    on application instead
+    """
     @staticmethod
     def add_region():
         """
-        adding new record(new region) to 'regions' and new record to 'cities' table linked to previously added region
+        adding new record(new region) to 'regions' and new records to 'cities' table linked to previously added region
         """
         while True:
             try:
@@ -90,6 +96,7 @@ class DBCONTROLLERS:
 
     @staticmethod
     def add_city():
+        """choosing regions and adding city to it"""
         print('Regions:')
         tmp_regions = session.query(Region).all()
         for i in tmp_regions:
@@ -112,6 +119,9 @@ class DBCONTROLLERS:
 
     @staticmethod
     def edit_region():
+        """
+        editing region name, population and adding new cities(optionally)
+        """
         tmp_regions = session.query(Region.region_id, Region.region_name).all()
         for i in tmp_regions:
             print('{}. {}'.format(i.region_id, i.region_name))
@@ -128,7 +138,7 @@ class DBCONTROLLERS:
             chosen_reg.region_population = new_population
             chosen_reg.region_square = new_square
             session.commit()
-            choice = int(input('Do u want to add new cities? (1/0) '))
+            choice = int(input('Do u want to add new cities? (1/0)) '))
             if choice:
                 while True:
                     a = input('Type name of a city (\'stop\' to stop')
@@ -148,6 +158,9 @@ class DBCONTROLLERS:
 
     @staticmethod
     def edit_city():
+        """
+        editing city name and (optionally) region
+        """
         tmp_cities = session.query(City.city_id, City.city_name).all()
         for i in tmp_cities:
             print('{}. {}'.format(i.city_id, i.city_name))
@@ -173,6 +186,7 @@ class DBCONTROLLERS:
 
     @staticmethod
     def delete_region():
+        """deleting region with all cities linked to it"""
         tmp_regions = session.query(Region).all()
         for i in tmp_regions:
             print("{}. {}".format(i.region_id, i.region_name))
@@ -190,6 +204,9 @@ class DBCONTROLLERS:
 
     @staticmethod
     def delete_city():
+        """
+        Deleting single city
+        """
         tmp_cities = session.query(City).all()
         for i in tmp_cities:
             print('{}. {}'.format(i.city_id, i.city_name))
@@ -207,7 +224,7 @@ class DBCONTROLLERS:
 
 # main body
 Base.metadata.create_all(engine)  # creating tables from schema(no affect if tables already exist)
-my_help = 'Laboratory work #6\n'\
+database_help = 'Laboratory work #6\n'\
         'Made by Oleksandr Korienev, student of iv-72\n'\
         'Only English is supported, cyrillic symbols can cause a crash\n'\
         'available commands:\n'\
@@ -220,12 +237,17 @@ my_help = 'Laboratory work #6\n'\
         '\'delete_city\' to delete city from the database\n'\
         '\'continue\' to finish the work with database'
 
+controls_help = '\'density\' to show the population density for the chosen region\n' \
+                '\'belonging\' to identify the region of chosen city\n' \
+                '\'exit\' to finish the work'
+
+
 while True:
     main_choice = input('choose an option, \'help\' to display help ')
     if main_choice == 'add_region':
         DBCONTROLLERS.add_region()
     elif main_choice == 'help':
-        print(my_help)
+        print(database_help)
     elif main_choice == 'add_city':
         DBCONTROLLERS.add_city()
     elif main_choice == 'edit_region':
@@ -249,5 +271,25 @@ for i in raw_region_list:
     tmp_cities = [j.city_name for j in city_query]
     i.append(tmp_cities)
     region_objects_list.append(REGION(i[1:]))
-for i in region_objects_list:
-    print(i)
+while True:
+    choice = input('choose an option, \'help to display help\'')
+    if choice == 'density':
+        for (i, j) in zip(region_objects_list, range(len(region_objects_list))):
+            print('{}. {}'.format(j, i.name))
+        try:
+            choice1 = int(input('choose index of region '))
+            assert choice1 in range(len(region_objects_list))
+            print(region_objects_list[choice1].population_density())
+        except AssertionError:
+            print('chosen index out of range')
+        except ValueError:
+            print('input incorrect')
+    elif choice == 'belonging':
+        city_to_find = input('type name of city to find ')
+        for i in region_objects_list:
+            if i.belonging(city_to_find):
+                print('the city belong to \'{}\' region'.format(i.name))
+    elif choice == 'exit':
+        break
+    else:
+        print('unknown command')
