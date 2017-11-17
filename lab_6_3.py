@@ -239,6 +239,8 @@ database_help = 'Laboratory work #6\n'\
 
 controls_help = '\'density\' to show the population density for the chosen region\n' \
                 '\'belonging\' to identify the region of chosen city\n' \
+                '\'info\' to get the information about chosen region\n' \
+                '\'sort\' to print regions sorted by population density\n' \
                 '\'exit\' to finish the work'
 
 
@@ -289,6 +291,20 @@ while True:
         for i in region_objects_list:
             if i.belonging(city_to_find):
                 print('the city belong to \'{}\' region'.format(i.name))
+    elif choice == 'info':
+        for (i, j) in zip(region_objects_list, range(len(region_objects_list))):
+            print('{}. {}'.format(j, i.name))
+        try:
+            choice1 = int(input('choose index of region '))
+            assert choice1 in range(len(region_objects_list))
+            print(region_objects_list[choice1])
+        except AssertionError:
+            print('chosen index out of range')
+        except ValueError:
+            print('input incorrect')
+    elif choice == 'sort':
+        for i in sorted(region_objects_list, key=lambda x: x.population_density()):
+            print('{} - {}'.format(i.name, i.population_density()))
     elif choice == 'exit':
         break
     else:
