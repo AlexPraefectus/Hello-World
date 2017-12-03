@@ -2,7 +2,7 @@ import os.path
 import re
 
 
-cfg = {'encoding': 'windows-1251',
+cfg = {'encoding': 'utf-8',
        'path': '10.txt',
        'errors': 'ignore',
        'file_1_path': '1.txt',
@@ -11,22 +11,35 @@ cfg = {'encoding': 'windows-1251',
 
 
 class FileControl:
-    def __init__(self, path):
-        try:
-            self.path = os.path.abspath(path)
-            self.file = open(r"{}".format(path), "r", encoding=cfg['encoding'], errors=cfg['errors'])
-            self.opening_flag = True
-            self.text = self.file.read()
-        except OSError:
-            print(r"Path {} is incorrect".format(path))
-            self.opening_flag = False
+    def __init__(self, path, mode="r"):
+        if mode == "r":
+            try:
+                self.path = os.path.abspath(path)
+                self.file = open(r"{}".format(path), "r", encoding=cfg['encoding'], errors=cfg['errors'])
+                self.opened_for_reading_flag = True
+                self.text = self.file.read()
+            except OSError:
+                print(r"Path {} is incorrect".format(path))
+                self.opened_for_reading_flag = False
+        elif mode == "w":
+            try:
+                self.path = os.path.abspath(path)
+                self.file = open(r"{}".format(path), "w", encoding=cfg['encoding'], errors=cfg['errors'])
+                self.opened_for_writing_flag = True
+            except OSError:
+                print(r"Path {} is incorrect".format(path))
+                self.opened_for_writing_flag = False
 
     def __del__(self):
-        if self.opening_flag:
-            self.file.close()
+        self.file.close()
+
+    def write_to_file_w_newline(self, text_to_print):
+        if self.opened_for_writing_flag:
+            self.file.write(text_to_print)
+            self.file.write('\n')
 
     def get_text(self):
-        if self.opening_flag:
+        if self.opened_for_reading_flag:
             return self.text
         else:
             return False
@@ -51,7 +64,7 @@ class TextProcessing:
     def split1_by_3dots(self):
         try:
             while self.processing_text:
-                res = re.search('\.\.\.( +[Ї-Я]| +\- [Ї-Я]|\")', self.processing_text)
+                res = re.search('\.\.\.( +[Ї-Я]| +\- [І-Я]|\")', self.processing_text)
                 if not res:
                     self.raw_sentences_lst1.append(self.processing_text)
                     break
@@ -79,7 +92,7 @@ class TextProcessing:
         for k in self.raw_sentences_lst2:
             try:
                 while k:
-                    res = re.search('(\w[\?\.!] \- \w|\w[\?\.!]{1} |\w\[[0-9]\]. )', k)
+                    res = re.search('(\w[\?\.!] ?\- \w|\w[\?\.!]{1} |\w\[[0-9]\]. )', k)
                     if not res:
                         self.final_sentences_lst.append(k)
                         break
@@ -96,13 +109,36 @@ class TextProcessing:
         self.split_by_single_marks()
         return self.final_sentences_lst
 
+    def get_sentence_with_odd_or_even_length(self, needed='odd'):
+        lst = []
+        for z in self.get_processed_text():
+            if needed == 'odd':
+                if sum([len(a) for a in re.findall('[І-є]+',z)])%2 == 1:
+                    lst.append(z)
+            elif needed == 'even':
+                if sum([len(a) for a in re.findall('[І-є]+',z)])%2 == 0:
+                    lst.append(z)
+            else:
+                return 1
+        return lst
 
-class LabWork7:
-    def __init__(self, encoding, path, errors, file_1_path, file_2_path):
-        i_file = FileControl(path=path)
-        o1_file = FileControl(path=file_1_path)
 
-
-a = TextProcessing(FileControl(cfg['path']).get_text()).get_processed_text()
-for i in a:
+i_file = FileControl(path=cfg['path'], mode='r')
+o1_file = FileControl(path=cfg['file_1_path'], mode='w')
+text_processor = TextProcessing(i_file.get_text())
+needed_sentences = text_processor.get_sentence_with_odd_or_even_length(needed='odd')
+for i in needed_sentences:
     print(i.strip())
+
+
+"""
+if o2_file.opened_for_writing_flag:
+    for j in i_file.get_text().split():
+        if len(re.findall('[аoуiиеяюєїАОУІИЕЯЮЄЇ]', j)) >= 3:
+            o2_file.write_to_file_w_newline(re.search('[І-є]+', j))
+
+
+c = LabWork7(cfg['path'], cfg['file_1_path'], cfg['file_2_path'])
+c.task1()
+c.task2()
+"""
