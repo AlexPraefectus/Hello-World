@@ -1,6 +1,5 @@
 import os.path
 import re
-import os
 
 
 cfg = {'encoding': 'utf-8',
@@ -12,35 +11,22 @@ cfg = {'encoding': 'utf-8',
 
 
 class FileControl:
-    def __init__(self, path, mode="r"):
-        if mode == "r":
-            try:
-                self.path = os.path.abspath(path)
-                self.file = open(r"{}".format(path), "r", encoding=cfg['encoding'], errors=cfg['errors'])
-                self.opened_for_reading_flag = True
-                self.text = self.file.read()
-            except OSError:
-                print(r"Path {} is incorrect".format(path))
-                self.opened_for_reading_flag = False
-        elif mode == "w":
-            try:
-                self.path = os.path.abspath(path)
-                self.file = open(r"{}".format(path), "w", encoding=cfg['encoding'], errors=cfg['errors'])
-                self.opened_for_writing_flag = True
-            except OSError:
-                print(r"Path {} is incorrect".format(path))
-                self.opened_for_writing_flag = False
+    def __init__(self, path):
+        try:
+            self.path = os.path.abspath(path)
+            self.file = open(r"{}".format(path), "r", encoding=cfg['encoding'], errors=cfg['errors'])
+            self.opening_flag = True
+            self.text = self.file.read()
+        except OSError:
+            print(r"Path {} is incorrect".format(path))
+            self.opening_flag = False
 
     def __del__(self):
-        self.file.close()
-
-    def write_to_file_w_newline(self, text_to_print):
-        if self.opened_for_writing_flag:
-            self.file.write(text_to_print)
-            self.file.write('\n')
+        if self.opening_flag:
+            self.file.close()
 
     def get_text(self):
-        if self.opened_for_reading_flag:
+        if self.opening_flag:
             return self.text
         else:
             return False
@@ -51,7 +37,7 @@ class TextProcessing:
         self.processing_text = text
         self.raw_sentences_lst1 = []
         self.raw_sentences_lst2 = []
-        self.raw_sentences_lst3 = []
+        self.final_sentences_lst = []
 
     def deleting_control_symbols(self):
         self.processing_text = self.processing_text.replace('\n', ' ')
@@ -93,12 +79,12 @@ class TextProcessing:
         for k in self.raw_sentences_lst2:
             try:
                 while k:
-                    res = re.search('(\w[\?\.!]{1} |\w\[[0-9]\]\.)', k)
+                    res = re.search('(\w[\?\.!] \- [І-Я]|\w[\?\.!]{1} |\w\[[0-9]\]\. )', k)
                     if not res:
-                        self.raw_sentences_lst3.append(k)
+                        self.final_sentences_lst.append(k)
                         break
                     else:
-                        self.raw_sentences_lst3.append(k[:k.index(res.group(0)) + len(res.group(0))])
+                        self.final_sentences_lst.append(k[:k.index(res.group(0)) + len(res.group(0))])
                         k = k[k.index(res.group(0)) + len(res.group(0)):]
             except ValueError:
                 pass
@@ -108,7 +94,7 @@ class TextProcessing:
         self.split1_by_3dots()
         self.split2_by_quest_exclam_marks()
         self.split_by_single_marks()
-        return self.raw_sentences_lst3
+        return self.final_sentences_lst
 
     def get_sentence_with_odd_or_even_length(self, needed='odd'):
         lst = []
@@ -123,16 +109,12 @@ class TextProcessing:
                 return 1
         return lst
 
-mkdir
-i_file = FileControl(path=cfg['path'], mode='r')
-o1_file = FileControl(path=cfg['file_1_path'], mode='w')
-o2_file = FileControl(path=cfg['file_2_path'], mode='w')
-text_processor = TextProcessing(i_file.get_text())
-needed_sentences = text_processor.get_sentence_with_odd_or_even_length(needed='odd')
-for i in needed_sentences:
-    o1_file.write_to_file_w_newline(i.strip())
-for j in i_file.get_text().split():
-    if len(re.findall('[аoуiиеяюєїАОУІИЕЯЮЄЇ]', j)) >= 3:
-        o2_file.write_to_file_w_newline(j)
+class LabWork7:
+    def __init__(self, encoding, path, errors, file_1_path, file_2_path):
+        i_file = FileControl(path=path)
+        o1_file = FileControl(path=file_1_path)
 
 
+a = TextProcessing(FileControl(cfg['path']).get_text()).get_processed_text()
+for i in a:
+    print(i.strip())
