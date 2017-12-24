@@ -1,5 +1,5 @@
 from tkinter import *
-from random import randint
+from random import randint, choice, shuffle
 
 
 info = {
@@ -43,14 +43,45 @@ def generate_random_sets(event):
         size_b = int(amount2.get())
         size_c = int(amount3.get())
         gen_range = (int(range_start.get()), int(range_end.get()))
-        A = [randint(*gen_range) for i in range(size_a)]
-        B = [randint(*gen_range) for i in range(size_b)]
-        C = [randint(*gen_range) for i in range(size_c)]
+        gen_A = [i for i in range(*gen_range)]
+        shuffle(gen_A)
+        gen_B = [i for i in range(*gen_range)]
+        shuffle(gen_B)
+        gen_C = [i for i in range(*gen_range)]
+        shuffle(gen_C)
+        A = {gen_A.pop() for i in range(size_a)}
+        B = {gen_B.pop() for i in range(size_b)}
+        C = {gen_C.pop() for i in range(size_c)}
         print(size_a, A, size_b, B, size_c, C)
     except ValueError:
         status["text"] = "Error occured, try again"
+    except IndexError:
+        status["text"] = "Size and Range of generating are not compatible"
     else:
         status["text"] = "Sets generated"
+        collection_status["text"] = "Sets are not collected"
+
+
+def get_sets_from_input(event):
+    """strings typed in text fields are transformed into sets"""
+    try:
+        A = set_A.get(1.0, END).split()
+        A = {int(i) for i in A}
+        assert len(A) > 0
+        B = set_B.get(1.0, END).split()
+        B = {int(i) for i in B}
+        assert len(B) > 0
+        C = set_C.get(1.0, END).split()
+        C = {int(i) for i in C}
+        assert len(C) > 0
+        universal_set = [i for i in range(min(min(A), min(B), min(C)), max(max(A), max(B), max(C)) + 1)]
+    except AssertionError:
+        collection_status["text"] = "Sets are empty"
+    except ValueError:
+        collection_status["text"] = "All elements should be numbers"
+    else:
+        collection_status["text"] = "sets collected"
+        status["text"] = "Sets are not generated"
 
 
 class MyButton:
@@ -120,6 +151,13 @@ set_C = Text(input_set, width=21, height=2, wrap=WORD, font="Arial 14")
 set_A.grid(row=0, column=1)
 set_B.grid(row=0, column=2)
 set_C.grid(row=0, column=3)
+help_box = Label(input_set, text="Numbers should be divided by \" \"", font="Arial 14")
+help_box.grid(row=1, column=1, columnspan=2, sticky="w")
+collect = MyButton(parent=input_set, text="Collect", height=1, width=20)
+collect.but.bind("<Button-1>", get_sets_from_input)
+collect.but.grid(row=2, column=1)
+collection_status = Label(input_set, text="No sets collected", font="Arial 14")
+collection_status.grid(row=3, column=1, columnspan=2, sticky="w")
 input_set.grid(row=2, column=1, sticky="w")
 
 
