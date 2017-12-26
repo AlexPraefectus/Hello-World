@@ -1,13 +1,17 @@
 from tkinter import *
-from random import randint, choice, shuffle
-
+from tkinter import messagebox
+from random import shuffle
+from calculations import Variant10
 
 info = {
     "Student": "Oleksandr Korienev",
     "Group": "IV-72",
     "Number_in_list": 10
 }
-
+A = {}
+B = {}
+C = {}
+universal_set = {}
 
 def go_to_root(event):
     """hiding all Toplevel windows, root on top """
@@ -30,10 +34,15 @@ def go_to_win3(event):
     win3.tkraise()
 
 
-def get_info():
-    """Returns formatted information string"""
-    return "{},student of {} group, number in group list: {}".format(info["Student"],
-                                                                     info["Group"], info["Number_in_list"])
+def get_info(event):
+    """shows messagebox with information about student"""
+    a = messagebox.showinfo("Student", "{},student of {} group, number in group list: {}".format(info["Student"],
+                            info["Group"], info["Number_in_list"]))
+
+
+def print_calculations_result(event):
+    calculation_obj = Variant10(A, B, C, universal_set)
+    result = messagebox.showinfo("Result", "{}".format(calculation_obj.step_5_d_final()))
 
 
 def generate_random_sets(event):
@@ -49,10 +58,16 @@ def generate_random_sets(event):
         shuffle(gen_B)
         gen_C = [i for i in range(*gen_range)]
         shuffle(gen_C)
+        global A
+        global B
+        global C
+        global universal_set
         A = {gen_A.pop() for i in range(size_a)}
         B = {gen_B.pop() for i in range(size_b)}
         C = {gen_C.pop() for i in range(size_c)}
+        universal_set = [i for i in range(min(min(A), min(B), min(C)), max(max(A), max(B), max(C)) + 1)]
         print(size_a, A, size_b, B, size_c, C)
+
     except ValueError:
         status["text"] = "Error occured, try again"
     except IndexError:
@@ -65,6 +80,10 @@ def generate_random_sets(event):
 def get_sets_from_input(event):
     """strings typed in text fields are transformed into sets"""
     try:
+        global A
+        global B
+        global C
+        global universal_set
         A = set_A.get(1.0, END).split()
         A = {int(i) for i in A}
         assert len(A) > 0
@@ -159,7 +178,14 @@ collect.but.grid(row=2, column=1)
 collection_status = Label(input_set, text="No sets collected", font="Arial 14")
 collection_status.grid(row=3, column=1, columnspan=2, sticky="w")
 input_set.grid(row=2, column=1, sticky="w")
-
+# result of calculations
+get_result = MyButton(parent=root, text="RESULT", height=2)
+get_result.but.bind("<Button-1>", print_calculations_result)
+get_result.but.grid(row=3, column=1, sticky="w")
+# info button
+whoami = MyButton(parent=root, height=1, text="Student")
+whoami.but.grid(row=5, column=1, sticky="w")
+whoami.but.bind("<Button-1>", get_info)
 
 # second window(Toplevel)
 win2 = Toplevel(root)
