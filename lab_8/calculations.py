@@ -1,9 +1,3 @@
-A = {0, -1, 10, 43, 55, 31}
-B = {-1, -3, -7, 55, 42, 1, 58}
-C = {42, 0, -7, 43}
-U = {i for i in range(-7, 59)}
-
-
 class Variant10:
     """methods make step by step calculations of given expression\n
     result of each step can be obtained by calling initializing object\n
@@ -77,15 +71,3 @@ class Variant10:
                 return self.result_D
         except TypeError:
             self.D_impossible_to_calculate_flag = True
-
-
-test = Variant10(A, B, C, U)
-test.step_1_d()
-test.step_2_d()
-test.step_3_d()
-test.step_4_d()
-test.step_5_d_final()
-print(test.step_5_d_final())
-pass
-
-

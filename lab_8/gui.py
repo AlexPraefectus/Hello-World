@@ -1,6 +1,8 @@
 from tkinter import *
 from tkinter import messagebox
 from random import shuffle
+from tkinter import filedialog
+from os import rename
 from calculations import Variant10
 
 info = {
@@ -8,10 +10,12 @@ info = {
     "Group": "IV-72",
     "Number_in_list": 10
 }
-A = {}
-B = {}
-C = {}
+A = set()
+B = set()
+C = set()
 universal_set = {}
+a = 0
+
 
 def go_to_root(event):
     """hiding all Toplevel windows, root on top """
@@ -42,7 +46,8 @@ def get_info(event):
 
 def print_calculations_result(event):
     calculation_obj = Variant10(A, B, C, universal_set)
-    result = messagebox.showinfo("Result", "{}".format(calculation_obj.step_5_d_final()))
+    # result = messagebox.showinfo("Result", "{}".format(calculation_obj.step_5_d_final()))
+    result = messagebox.showinfo("Result", "{}".format(a.step_5_d_final()))
 
 
 def generate_random_sets(event):
@@ -65,9 +70,10 @@ def generate_random_sets(event):
         A = {gen_A.pop() for i in range(size_a)}
         B = {gen_B.pop() for i in range(size_b)}
         C = {gen_C.pop() for i in range(size_c)}
-        universal_set = [i for i in range(min(min(A), min(B), min(C)), max(max(A), max(B), max(C)) + 1)]
-        print(size_a, A, size_b, B, size_c, C)
-
+        universal_set = {i for i in range(min(min(A), min(B), min(C)), max(max(A), max(B), max(C)) + 1)}
+        global a
+        a = Variant10(A, B, C, universal_set)
+        pass
     except ValueError:
         status["text"] = "Error occured, try again"
     except IndexError:
@@ -93,7 +99,9 @@ def get_sets_from_input(event):
         C = set_C.get(1.0, END).split()
         C = {int(i) for i in C}
         assert len(C) > 0
-        universal_set = [i for i in range(min(min(A), min(B), min(C)), max(max(A), max(B), max(C)) + 1)]
+        universal_set = {i for i in range(min(min(A), min(B), min(C)), max(max(A), max(B), max(C)) + 1)}
+        global a
+        a = Variant10(A, B, C, universal_set)
     except AssertionError:
         collection_status["text"] = "Sets are empty"
     except ValueError:
@@ -101,6 +109,68 @@ def get_sets_from_input(event):
     else:
         collection_status["text"] = "sets collected"
         status["text"] = "Sets are not generated"
+
+
+def show_A_f(event):
+    text_field.delete(1.0, END)
+    if A:
+        text_field.insert(1.0, str(A))
+    else:
+        text_field.insert(1.0, "Empty set")
+
+
+def show_B_f(event):
+    text_field.delete(1.0, END)
+    if B:
+        text_field.insert(1.0, str(B))
+    else:
+        text_field.insert(1.0, "Empty set")
+
+
+def show_C_f(event):
+    text_field.delete(1.0, END)
+    if C:
+        text_field.insert(1.0, str(C))
+    else:
+        text_field.insert(1.0, "Empty set")
+
+
+def step_1_f(event):
+    text_field.delete(1.0, END)
+    text_field.insert(1.0, "A {}\nintersects\nB {}\nresult:\n{}".format(str(A), str(B), str(a.step_1_d())))
+
+
+def step_2_f(event):
+    text_field.delete(1.0, END)
+    text_field.insert(1.0, "A {}\nintersects\nnot C {}\nresult:\n{}".format(str(A), str(universal_set - C),
+                                                                            str(a.step_2_d())))
+
+
+def step_3_f(event):
+    text_field.delete(1.0, END)
+    text_field.insert(1.0, "not A {}\nintersects\nB {}\nresult:\n{}".format(str(universal_set - A), B,
+                                                                            str(a.step_3_d())))
+
+
+def step_4_f(event):
+    text_field.delete(1.0, END)
+    text_field.insert(1.0, "Step 2 {}\nunion with\nStep 3 {}\nresult:\n{}".format(str(a.step_2_d()), str(a.step_3_d()),
+                                                                                  str(a.step_4_d())))
+
+
+def step_5_f(event):
+    text_field.delete(1.0, END)
+    text_field.insert(1.0, "Step 1 {}\nunion with\nStep 4 {}\nresult:\n{}".format(str(a.step_1_d()), str(a.step_4_d()),
+                                                                                  str(a.step_5_d_final())))
+
+
+def save_to_file(event):
+    file = filedialog.asksaveasfile(initialdir="/", title="Select file", filetypes=(("file", "*.txt"),
+                                                                                    ("all files", "*.*")))
+    text = text_field.get(1.0, END)
+    print(text, file=file, flush=True)
+    file.close()
+    rename(file.name, file.name+".txt")
 
 
 class MyButton:
@@ -119,6 +189,7 @@ class MyButton:
 
 # main window (Tk)
 root = Tk()
+root.title("Main Window")
 root.geometry("670x600")
 root["bg"] = "RosyBrown"
 root.resizable(False, False)
@@ -189,6 +260,10 @@ whoami.but.bind("<Button-1>", get_info)
 
 # second window(Toplevel)
 win2 = Toplevel(root)
+win2.title("Second window")
+win2.geometry("670x600")
+win2["bg"] = "RosyBrown"
+win2.resizable(False, False)
 # navigation frame
 nav_frame_2 = Frame(win2)
 to_root = MyButton(parent=nav_frame_2, text="window 1")
@@ -197,10 +272,49 @@ to_win2 = MyButton(parent=nav_frame_2, text="window 2", button_grid=(1, 2))
 to_win2.but.bind("<Button-1>", go_to_win2)
 to_win3 = MyButton(parent=nav_frame_2, text="window 3", button_grid=(1, 3))
 to_win3.but.bind("<Button-1>", go_to_win3)
+# sets output, text frame for output
 nav_frame_2.grid(row=0, column=1)
+sets_frame_buts = Frame(win2, bg="RosyBrown")
+show_A = MyButton(parent=sets_frame_buts, height=2, text="Show A")
+show_B = MyButton(parent=sets_frame_buts, height=2, text="Show B")
+show_C = MyButton(parent=sets_frame_buts, height=2, text="Show C")
+show_A.but.grid(row=1, column=1, sticky="w")
+show_B.but.grid(row=1, column=2, sticky="w")
+show_C.but.grid(row=1, column=3, sticky="w")
+show_A.but.bind("<Button-1>", show_A_f)
+show_B.but.bind("<Button-1>", show_B_f)
+show_C.but.bind("<Button-1>", show_C_f)
+text_field = Text(sets_frame_buts, width=61, height=9, font="Arial 14")
+text_field.grid(row=2, column=1, columnspan=3, sticky="w")
+sets_frame_buts.grid(row=1, column=1, sticky="w")
+steps = Frame(win2, bg="RosyBrown")
+step_1 = MyButton(parent=steps, height=1, text="Step 1")
+step_2 = MyButton(parent=steps, height=1, text="Step 2")
+step_3 = MyButton(parent=steps, height=1, text="Step 3")
+step_4 = MyButton(parent=steps, height=1, text="Step 4")
+step_5 = MyButton(parent=steps, height=1, text="Step 5")
+step_1.but.grid(row=1, column=1)
+step_2.but.grid(row=1, column=2)
+step_3.but.grid(row=1, column=3)
+step_4.but.grid(row=2, column=1)
+step_5.but.grid(row=2, column=2)
+step_1.but.bind("<Button-1>", step_1_f)
+step_2.but.bind("<Button-1>", step_2_f)
+step_3.but.bind("<Button-1>", step_3_f)
+step_4.but.bind("<Button-1>", step_4_f)
+step_5.but.bind("<Button-1>", step_5_f)
+save = MyButton(parent=steps, height=1, text="save this step")
+save.but.grid(row=2, column=3)
+save.but.bind("<Button-1>", save_to_file)
+steps.grid(row=2, column=1, sticky="w")
+
 
 # third window (Toplevel)
 win3 = Toplevel(root)
+win3.title("Third window")
+win3.geometry("670x600")
+win3["bg"] = "RosyBrown"
+win3.resizable(False, False)
 # navigation frame
 nav_frame_3 = Frame(win3)
 to_root = MyButton(parent=nav_frame_3, text="window 1")
