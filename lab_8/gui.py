@@ -3,6 +3,7 @@ from tkinter import messagebox
 from random import shuffle
 from tkinter import filedialog
 from os import rename
+from PIL import Image, ImageDraw, ImageFont
 from calculations import Variant10
 
 info = {
@@ -13,6 +14,7 @@ info = {
 A = set()
 B = set()
 C = set()
+F = set()
 universal_set = {}
 a = 0
 
@@ -45,6 +47,7 @@ def get_info(event):
 
 
 def print_calculations_result(event):
+    """messagebox with calculations result"""
     calculation_obj = Variant10(A, B, C, universal_set)
     # result = messagebox.showinfo("Result", "{}".format(calculation_obj.step_5_d_final()))
     result = messagebox.showinfo("Result", "{}".format(a.step_5_d_final()))
@@ -112,6 +115,7 @@ def get_sets_from_input(event):
 
 
 def show_A_f(event):
+    """A set printed to text box"""
     text_field.delete(1.0, END)
     if A:
         text_field.insert(1.0, str(A))
@@ -120,6 +124,7 @@ def show_A_f(event):
 
 
 def show_B_f(event):
+    """B set printed to text box"""
     text_field.delete(1.0, END)
     if B:
         text_field.insert(1.0, str(B))
@@ -128,6 +133,7 @@ def show_B_f(event):
 
 
 def show_C_f(event):
+    """C set printed to text box"""
     text_field.delete(1.0, END)
     if C:
         text_field.insert(1.0, str(C))
@@ -136,35 +142,41 @@ def show_C_f(event):
 
 
 def step_1_f(event):
+    """First step to text box"""
     text_field.delete(1.0, END)
     text_field.insert(1.0, "A {}\nintersects\nB {}\nresult:\n{}".format(str(A), str(B), str(a.step_1_d())))
 
 
 def step_2_f(event):
+    """Second step to text box"""
     text_field.delete(1.0, END)
     text_field.insert(1.0, "A {}\nintersects\nnot C {}\nresult:\n{}".format(str(A), str(universal_set - C),
                                                                             str(a.step_2_d())))
 
 
 def step_3_f(event):
+    """Third step to text box"""
     text_field.delete(1.0, END)
     text_field.insert(1.0, "not A {}\nintersects\nB {}\nresult:\n{}".format(str(universal_set - A), B,
                                                                             str(a.step_3_d())))
 
 
 def step_4_f(event):
+    """Fourth step to text box"""
     text_field.delete(1.0, END)
     text_field.insert(1.0, "Step 2 {}\nunion with\nStep 3 {}\nresult:\n{}".format(str(a.step_2_d()), str(a.step_3_d()),
                                                                                   str(a.step_4_d())))
 
 
 def step_5_f(event):
+    """Fifth step(final) to text box"""
     text_field.delete(1.0, END)
     text_field.insert(1.0, "Step 1 {}\nunion with\nStep 4 {}\nresult:\n{}".format(str(a.step_1_d()), str(a.step_4_d()),
                                                                                   str(a.step_5_d_final())))
 
 
 def save_to_file(event):
+    """Saving content of text box to a file, tkfiledialog used for choosing path"""
     file = filedialog.asksaveasfile(initialdir="/", title="Select file", filetypes=(("file", "*.txt"),
                                                                                     ("all files", "*.*")))
     text = text_field.get(1.0, END)
@@ -173,8 +185,79 @@ def save_to_file(event):
     rename(file.name, file.name+".txt")
 
 
+def generate_picture(event):
+    """generating and saving picture using pillow library, needs font file, picture is shown after saving"""
+    image = Image.new('RGBA', (600, 600), color="white")
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.truetype("NotoMono-Regular.ttf", 14)
+    draw.text((10, 10), "{}".format(text_field.get(1.0, END)), spacing=10, font=font, fill=(0, 0, 0))
+    image.save("1.png")
+    image.show("Your Result")
+
+
+def on_closing_root():
+    """Handling closing first window by pressing "x"""""
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        root.destroy()
+
+
+def on_closing_win2():
+    """Handling closing second window by pressing "x"""""
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        win2.withdraw()
+
+
+def on_closing_win3():
+    """Handling closing third window by pressing "x"""""
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        win3.withdraw()
+
+
+def generate_f_set(event):
+    """generating F set, sets A,B,C should be collected from input or generated for appropriate work"""
+    try:
+        gen_range = [i for i in range(min(a.step_5_d_final()), max(a.step_5_d_final()) + 1)]
+        shuffle(gen_range)
+        global F
+        F = {gen_range.pop() for i in range(len(a.step_5_d_final()))}
+        f_status.configure(text="F generated", fg="AntiqueWhite")
+        print(F)
+    except AttributeError:
+        f_status.configure(text="There's no D", fg="AntiqueWhite")
+
+
+def show_f_set(event):
+    text_field_win3.delete(1.0, END)
+    text_field_win3.insert(1.0, str(F))
+
+
+def print_x_func(event):
+    text_field_win3.delete(1.0, END)
+    text_field_win3.insert(1.0, str(F.union(universal_set - a.step_5_d_final())))
+
+
+def save_to_file_win3(event):
+    """Same to save_to_file"""
+    file = filedialog.asksaveasfile(initialdir="/", title="Select file", filetypes=(("file", "*.txt"),
+                                                                                    ("all files", "*.*")))
+    text = text_field_win3.get(1.0, END)
+    print(text, file=file, flush=True)
+    file.close()
+    rename(file.name, file.name+".txt")
+
+
+def generate_picture_win3(event):
+    """Same to generate_picture"""
+    image = Image.new('RGBA', (600, 600), color="white")
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.truetype("NotoMono-Regular.ttf", 14)
+    draw.text((10, 10), "{}".format(text_field_win3.get(1.0, END)), spacing=10, font=font, fill=(0, 0, 0))
+    image.save("2.png")
+    image.show("Your Result")
+
+
 class MyButton:
-    """default class for buttons, not derived class"""
+    """default class for buttons, not derived class for tkinter.Button"""
     def __init__(self, parent, button_grid=(1, 1), text="Empty", color=("AntiqueWhite", "LavenderBlush4",),
                  width=20, height=5, font="arial 14"):
         self.but = Button(parent)
@@ -193,6 +276,8 @@ root.title("Main Window")
 root.geometry("670x600")
 root["bg"] = "RosyBrown"
 root.resizable(False, False)
+root.protocol("WM_DELETE_WINDOW", on_closing_root)
+
 # navigation frame
 nav_frame_1 = Frame(root)
 to_root = MyButton(parent=nav_frame_1, text="window 1")
@@ -234,6 +319,7 @@ sets_generate.but.grid(row=0, column=12)
 status.grid(row=1, column=0, columnspan=13)
 sets_params.grid(row=1, column=1, sticky="w")
 # input sets
+
 input_set = Frame(root)
 set_A = Text(input_set, width=20, height=2, wrap=WORD, font="Arial 14")
 set_B = Text(input_set, width=20, height=2, wrap=WORD, font="Arial 14")
@@ -249,14 +335,17 @@ collect.but.grid(row=2, column=1)
 collection_status = Label(input_set, text="No sets collected", font="Arial 14")
 collection_status.grid(row=3, column=1, columnspan=2, sticky="w")
 input_set.grid(row=2, column=1, sticky="w")
+
 # result of calculations
 get_result = MyButton(parent=root, text="RESULT", height=2)
 get_result.but.bind("<Button-1>", print_calculations_result)
 get_result.but.grid(row=3, column=1, sticky="w")
+
 # info button
 whoami = MyButton(parent=root, height=1, text="Student")
 whoami.but.grid(row=5, column=1, sticky="w")
 whoami.but.bind("<Button-1>", get_info)
+
 
 # second window(Toplevel)
 win2 = Toplevel(root)
@@ -264,6 +353,8 @@ win2.title("Second window")
 win2.geometry("670x600")
 win2["bg"] = "RosyBrown"
 win2.resizable(False, False)
+win2.protocol("WM_DELETE_WINDOW", on_closing_win2)
+
 # navigation frame
 nav_frame_2 = Frame(win2)
 to_root = MyButton(parent=nav_frame_2, text="window 1")
@@ -272,6 +363,7 @@ to_win2 = MyButton(parent=nav_frame_2, text="window 2", button_grid=(1, 2))
 to_win2.but.bind("<Button-1>", go_to_win2)
 to_win3 = MyButton(parent=nav_frame_2, text="window 3", button_grid=(1, 3))
 to_win3.but.bind("<Button-1>", go_to_win3)
+
 # sets output, text frame for output
 nav_frame_2.grid(row=0, column=1)
 sets_frame_buts = Frame(win2, bg="RosyBrown")
@@ -287,6 +379,8 @@ show_C.but.bind("<Button-1>", show_C_f)
 text_field = Text(sets_frame_buts, width=61, height=9, font="Arial 14")
 text_field.grid(row=2, column=1, columnspan=3, sticky="w")
 sets_frame_buts.grid(row=1, column=1, sticky="w")
+
+# step by step calculations
 steps = Frame(win2, bg="RosyBrown")
 step_1 = MyButton(parent=steps, height=1, text="Step 1")
 step_2 = MyButton(parent=steps, height=1, text="Step 2")
@@ -307,6 +401,9 @@ save = MyButton(parent=steps, height=1, text="save this step")
 save.but.grid(row=2, column=3)
 save.but.bind("<Button-1>", save_to_file)
 steps.grid(row=2, column=1, sticky="w")
+save_as_image = MyButton(parent=win2, height=1, text="save this as image")
+save_as_image.but.bind("<Button-1>", generate_picture)
+save_as_image.but.grid(row=3, column=1)
 
 
 # third window (Toplevel)
@@ -315,6 +412,7 @@ win3.title("Third window")
 win3.geometry("670x600")
 win3["bg"] = "RosyBrown"
 win3.resizable(False, False)
+win3.protocol("WM_DELETE_WINDOW", on_closing_win3)
 # navigation frame
 nav_frame_3 = Frame(win3)
 to_root = MyButton(parent=nav_frame_3, text="window 1")
@@ -324,6 +422,37 @@ to_win2.but.bind("<Button-1>", go_to_win2)
 to_win3 = MyButton(parent=nav_frame_3, text="window 3", button_grid=(1, 3))
 to_win3.but.bind("<Button-1>", go_to_win3)
 nav_frame_3.grid(row=0, column=1)
+
+# generating + printing F set
+f_set_buttons = Frame(win3)
+generate_f = MyButton(parent=f_set_buttons, height=1, text="Generate F")
+generate_f.but.bind("<Button-1>", generate_f_set)
+show_f = MyButton(parent=f_set_buttons, height=1, text="Show F")
+show_f.but.bind("<Button-1>", show_f_set)
+f_status = Label(f_set_buttons, bg="RosyBrown", font="Arial 22")
+generate_f.but.grid(row=0, column=1,)
+show_f.but.grid(row=0, column=2,)
+f_status.grid(row=0, column=3)
+f_set_buttons.grid(row=1, column=1, sticky="w")
+
+# text box for window 3
+text_field_win3 = Text(win3, width=61, height=9, font="Arial 14")
+text_field_win3.grid(row=2, column=1, sticky="w")
+
+
+# saving picture, saving result to file, x calculations
+frame = Frame(win3)
+print_x = MyButton(parent=frame, height=1, text="Show X")
+print_x.but.bind("<Button-1>", print_x_func)
+print_x.but.grid(row=1, column=1, sticky="w")
+save_win3 = MyButton(parent=frame, height=1, text="save this")
+save_win3.but.grid(row=1, column=2)
+save_win3.but.bind("<Button-1>", save_to_file_win3)
+save_as_image_win3 = MyButton(parent=frame, height=1, text="save this as image")
+save_as_image_win3.but.bind("<Button-1>", generate_picture_win3)
+save_as_image_win3.but.grid(row=1, column=3)
+frame.grid(row=3, column=1, sticky="w")
+
 
 # start of a program
 win2.withdraw()
