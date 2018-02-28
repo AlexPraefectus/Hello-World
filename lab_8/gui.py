@@ -49,7 +49,6 @@ def get_info(event):
 def print_calculations_result(event):
     """messagebox with calculations result"""
     calculation_obj = Variant10(A, B, C, universal_set)
-    # result = messagebox.showinfo("Result", "{}".format(calculation_obj.step_5_d_final()))
     result = messagebox.showinfo("Result", "{}".format(a.step_5_d_final()))
 
 
